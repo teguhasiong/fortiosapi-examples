@@ -3,6 +3,7 @@
 
 import logging
 import sys
+import yaml
 
 # oyaml preserve order which can be important for Fortinet config.
 # we want to make it simple for the user
@@ -21,7 +22,7 @@ def main():
     # Parse for command line argument for fgt ip
     if len(sys.argv) < 2:
         # Requires fgt ip and password
-        print "Please specify fgt ip address"
+        print ("Please specify fgt ip address")
         exit()
 
     # Initilize fgt connection
@@ -39,7 +40,7 @@ def main():
 
     fgt = FortiOSAPI()
 
-    fgt.login(ip, 'admin', passwd)
+    fgt.login(ip, 'admin', passwd, verify=False )
     yamldata = '''
         antivirus:
             profile:
@@ -51,23 +52,24 @@ def main():
         firewall:
             policy:
                 66:
-                  'name': "Testfortiosapi",
-                  'action': "accept",
-                  'srcintf': [{"name": "port1"}],
-                  'dstintf': [{"name": "port2"}],
-                  'srcaddr': [{"name": "all"}],
-                  'dstaddr': [{"name": "all"}],
-                  'schedule': "always",
-                  'service': [{"name": "HTTPS"}],
-                  "utm-status": "enable",
-                  "profile-type": "single",
-                  'av-profile': "apiset",
-                  'profile-protocol-options': "default",
-                  'ssl-ssh-profile': "certificate-inspection",
+                  'name': "Testfortiosapi"
+                  'action': "accept"
+                  'srcintf': [{"name": "internal"}]
+                  'dstintf': [{"name": "virtual-wan-link"}]
+                  'srcaddr': [{"name": "all"}]
+                  'dstaddr': [{"name": "all"}]
+                  'schedule': "always"
+                  'service': [{"name": "HTTPS"}]
+                  "utm-status": "enable"
+                  "profile-type": "single"
+                  'av-profile': "apiset"
+                  'profile-protocol-options': "default"
+                  'ssl-ssh-profile': "certificate-inspection"
                   'logtraffic': "all"
                 '''
-
-    fgt.settree(yamltree=yamldata)
+    
+    yamldict = yaml.load( yamldata, Loader=yaml.FullLoader)
+    fgt.setoverlayconfig(yamltree=yamldict)
     fgt.logout()
 
 
